@@ -55,16 +55,19 @@ equipos= """
 def verEquiposEndpoint(request):
     if request.method== "GET":
         nombreFiltro=request.GET.get("nombre")
+        anhoFiltro=request.GET.get("anho")
 
         #Reemplazado por lambda
         ##def filtro(equipo):
         ##    print(equipo["nombre"])
         ##    return equipo["nombre"].lower()==nombreFiltro
 
-        if nombreFiltro == "":
+        if nombreFiltro == "" and anhoFiltro=="0":
             listaEquiposFiltrada= Equipo.objects.all()
-        else:
+        elif anhoFiltro=="0":
             listaEquiposFiltrada= Equipo.objects.filter(nombre__contains=nombreFiltro)
+        else:
+            listaEquiposFiltrada= Equipo.objects.filter(nombre__contains=nombreFiltro, anho=anhoFiltro)
 
         #listaEquipos= json.loads(equipos)
         
