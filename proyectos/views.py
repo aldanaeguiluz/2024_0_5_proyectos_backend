@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from proyectos.models import Usuario, Equipo
 
 usuarios="""
 [
@@ -55,18 +56,36 @@ def verEquiposEndpoint(request):
     if request.method== "GET":
         nombreFiltro=request.GET.get("nombre")
 
+        #Reemplazado por lambda
         ##def filtro(equipo):
         ##    print(equipo["nombre"])
         ##    return equipo["nombre"].lower()==nombreFiltro
 
-        listaEquipos= json.loads(equipos)
-        ##listaEquiposFiltrada=list(filter(filtro, listaEquipos))
-        listaEquiposFiltrada=list(
-            filter(
-                lambda x: x["nombre"].lower()==nombreFiltro, 
-                listaEquipos))
-        return HttpResponse(json.dumps(listaEquiposFiltrada))
-    return HttpResponse(equipos)
+        if nombreFiltro == "":
+            listaEquiposFiltrada= Equipo.objects.all()
+        else:
+            listaEquiposFiltrada= Equipo.objects.filter(nombre__contains=nombreFiltro)
+
+        #listaEquipos= json.loads(equipos)
+        
+        #Reemplazado por lambda
+        #listaEquiposFiltrada=list(filter(filtro, listaEquipos))
+        
+        # listaEquiposFiltrada=list(
+        #    filter(
+        #        lambda x: x["nombre"].lower()==nombreFiltro, 
+        #        listaEquipos)) 
+        #return HttpResponse(json.dumps(listaEquiposFiltrada))
+
+        dataResponse=[]
+        for equipo in listaEquiposFiltrada:
+            dataResponse.append({
+                "nombre": equipo.nombre,
+                "integrantes": []
+            })
+
+        return HttpResponse(json.dumps(dataResponse))
+    #return HttpResponse(equipos)
 
 def verEquiposPathParametersEndpoint(request, filtro):
     if request.method== "GET":
@@ -135,13 +154,21 @@ def loginPostJsonEndpoint(request):
         data=request.body
         usernameData= json.loads(data)
         
-        listaUsuarios=json.loads(usuarios)
-        listaUsuariosFiltrada=list(
-            filter(
-                lambda x:x["username"]==usernameData["username"] and x["password"]==usernameData["password"],
-                listaUsuarios
-            )
+        username=usernameData["username"]
+        password=usernameData["password"]
+
+        listaUsuariosFiltrada = Usuario.objects.filter(
+            username=username, password=password
         )
+        
+        ##sin bd (desde usernameData=json.loads(data))
+        ##listaUsuarios=json.loads(usuarios)
+        ##listaUsuariosFiltrada=list(
+        ##    filter(
+        ##        lambda x:x["username"]==usernameData["username"] and x["password"]==usernameData["password"],
+        ##        listaUsuarios
+        ##    )
+        ##)
 
         if len(listaUsuariosFiltrada)>0:
             respuesta={

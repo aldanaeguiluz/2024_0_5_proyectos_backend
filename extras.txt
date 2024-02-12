@@ -1,0 +1,15 @@
+pip install -r requirements.txt (para instalar requerimientos)
+pip freeze > requirements.txt (actualizar dependencias)
+
+para ejecutar el server backend
+python manage.py runserver
+
+crear migracion
+python manage.py makemigrations
+migrar
+python manage.py migrate
+
+crear superusuario
+python manage.py createsuperuser
+
+ctrl shift comment
