@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from proyectos.models import Usuario, Equipo
+from django.views.decorators.csrf import csrf_exempt
+from django.forms import ValidationError
 
 usuarios="""
 [
@@ -83,6 +85,7 @@ def verEquiposEndpoint(request):
         dataResponse=[]
         for equipo in listaEquiposFiltrada:
             dataResponse.append({
+                "id": equipo.pk,
                 "nombre": equipo.nombre,
                 "integrantes": []
             })
@@ -183,3 +186,92 @@ def loginPostJsonEndpoint(request):
                 "msg": "Error en el login"
             }
             return HttpResponse(json.dumps(respuesta))
+
+#Path /equipo POST
+@csrf_exempt
+def registrarEquipo(request):
+    if request.method=="POST":
+        data= request.body
+        equipoDict= json.loads(data)
+
+        if equipoDict["nombre"]=="" or equipoDict["anho"]=="":
+            errorDict={
+                "msg": "Debe llenar todos los campos"
+            }
+            return HttpResponse(json.dumps(errorDict))
+
+        equipo= Equipo(
+            nombre=equipoDict["nombre"],
+            anho= equipoDict["anho"],
+            estado="A"
+        )
+
+        equipo.save()
+
+        respDict={
+            "msg":""
+        }
+
+        return HttpResponse(json.dumps(respDict))
+
+#Query parameter
+@csrf_exempt
+def eliminarEquipo(request):
+    if request.method=="GET":
+        proyectoId= request.GET.get("id")
+
+        if proyectoId=="":
+            errorDict={
+                "msg": "Debe enviar un id de proyecto"
+            }
+            return HttpResponse(json.dumps(errorDict))
+
+        try:
+            equipo=Equipo.objects.get(pk=proyectoId)
+        except:
+            errorDict={
+                "msg": "Debe enviar un id existente de proyecto"
+            }
+            return HttpResponse(json.dumps(errorDict))
+
+        msgDict={
+            "msg":""
+        }
+
+        equipo.delete()
+
+        return HttpResponse(json.dumps(msgDict))
+
+#Query parameter
+@csrf_exempt
+def verEquipo(request):
+    if request.method=="GET":
+        equipoId=request.GET.get("id")
+
+        if equipoId=="":
+            errorDict={
+                "msg":"Debe enviar un id de equipo"
+            }
+            return HttpResponse(json.dumps(errorDict))
+
+        try:
+            equipo=Equipo.objects.get(pk=equipoId)
+        except:
+            errorDict={
+                "msg":"Debe enviar un id de equipo que exista"
+            }
+            return HttpResponse(json.dumps(errorDict))
+
+        respDict={
+            "id":equipo.pk,
+            "nombre":equipo.nombre,
+            "anho":equipo.anho,
+            "estado":equipo.estado,
+            "integrantes":[],
+            "msg":""
+        }
+        return HttpResponse(json.dumps(respDict))
+
+@csrf_exempt
+def modificarEquipo(request):
+    pass
