@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from proyectos.models import Usuario, Equipo
+from proyectos.models import Usuario, Equipo, Integrante
 from django.views.decorators.csrf import csrf_exempt
 from django.forms import ValidationError
 
@@ -84,10 +84,12 @@ def verEquiposEndpoint(request):
 
         dataResponse=[]
         for equipo in listaEquiposFiltrada:
+            listaIntegrantesQuerySet=Integrante.objects.filter(equipo_id=equipo.pk)
+            listaIntegrantes=list(listaIntegrantesQuerySet.values())
             dataResponse.append({
                 "id": equipo.pk,
                 "nombre": equipo.nombre,
-                "integrantes": []
+                "integrantes": listaIntegrantes
             })
 
         return HttpResponse(json.dumps(dataResponse))
@@ -205,8 +207,16 @@ def registrarEquipo(request):
             anho= equipoDict["anho"],
             estado="A"
         )
-
         equipo.save()
+
+        integrantes= equipoDict['integrantes']
+        for d in integrantes:
+            integrante=Integrante(
+                codigo= d['codigo'],
+                nombre= d['nombre'],
+                equipo= equipo
+            )
+            integrante.save()
 
         respDict={
             "msg":""
